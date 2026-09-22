@@ -1,6 +1,6 @@
 # Microservices Engineering Lab
 
-A dedicated hands-on repository for Java + Spring Boot microservices and distributed-system engineering.
+A hands-on repository for Java + Spring Boot microservices and distributed-system engineering.
 
 > Learning/demo work only. No employer or client implementation is reproduced here.
 
@@ -30,7 +30,7 @@ Consumer              Consumer
 
 The goal is not simply to create multiple Spring Boot applications. A service should represent a meaningful business capability with clear ownership.
 
-For every boundary ask:
+Each time ask --->>
 - What business capability does this service own?
 - Which data does it own?
 - Which operations must be atomic?
@@ -134,7 +134,6 @@ Controls traffic and protects service capacity.
 
 Distributed systems require visibility across services.
 
-Study:
 - Structured logs
 - Metrics
 - Distributed traces
@@ -181,6 +180,3 @@ Docker Compose
 11. CI/CD
 12. Security
 
-## Interview focus
-
-A strong microservices answer should discuss failure scenarios, data ownership, consistency, observability, deployment and security—not only architecture diagrams.
