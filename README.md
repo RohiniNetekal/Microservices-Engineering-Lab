@@ -1,89 +1,186 @@
 # Microservices Engineering Lab
 
-A dedicated hands-on space for learning **Java/Spring Boot microservices** and the engineering problems that appear when a monolith is split into independently deployable services.
+A dedicated hands-on repository for Java + Spring Boot microservices and distributed-system engineering.
 
 > Learning/demo work only. No employer or client implementation is reproduced here.
 
 ## Target architecture
 
-```text
-                    +----------------+
-Client ------------>| API Gateway    |
-                    +-------+--------+
-                            |
-              +-------------+-------------+
-              |                           |
-              v                           v
-      +---------------+           +---------------+
-      | Order Service |           | Merchant Svc  |
-      +-------+-------+           +-------+-------+
-              |                           |
-              v                           v
-          Order DB                   Merchant DB
+~~~text
+Client
+  |
+API Gateway
+  |
+  +------------+-------------+
+  |                          |
+Order Service            Merchant Service
+  |                          |
+Order DB                 Merchant DB
+  |
+OrderCreated
+  |
+Kafka
+  +----------+-----------+
+  |                      |
+Notification          Reporting
+Consumer              Consumer
+~~~
 
-                    +----------------+
-                    |     Kafka      |
-                    +-------+--------+
-                            |
-                    +-------+--------+
-                    | Event Consumer |
-                    +----------------+
-```
+## Why microservices?
 
-## Concepts to build
+The goal is not simply to create multiple Spring Boot applications. A service should represent a meaningful business capability with clear ownership.
 
-### Service fundamentals
-- Service boundaries
-- Database-per-service
-- REST communication
-- DTOs and contracts
-- Configuration management
-- Health checks
+For every boundary ask:
+- What business capability does this service own?
+- Which data does it own?
+- Which operations must be atomic?
+- What API does it expose?
+- What events should it publish?
+- What happens when a dependency is unavailable?
 
-### Reliability
-- Connection/read timeouts
-- Retry with exponential backoff
-- Idempotency
-- Circuit breaker concept
-- Bulkhead concept
-- Rate limiting
-- Graceful degradation
+## Synchronous communication
 
-### Messaging
-- Kafka producers and consumers
-- Topics and partitions
+HTTP between services introduces network failures.
+
+Study:
+- Connection timeout
+- Read timeout
+- Retry policy
+- Backoff
+- Error mapping
+- Correlation IDs
+- Metrics
+
+A service should not wait forever for another service.
+
+## Database ownership
+
+Preferred learning model:
+
+~~~text
+Order Service -> Order DB
+Merchant Service -> Merchant DB
+~~~
+
+Directly reading another service's database creates tight coupling and bypasses the owning service's rules.
+
+## Distributed transactions
+
+A transaction inside one database is simpler than a business operation spanning services.
+
+Important concepts:
+- Eventual consistency
+- Saga pattern
+- Compensating actions
+- Outbox pattern
+- Idempotent consumers
+
+## Kafka
+
+Core model:
+
+~~~text
+Producer -> Topic -> Partition -> Consumer Group
+                         |
+                       Offset
+~~~
+
+Understand:
+- Topics
+- Partitions
+- Keys
+- Ordering
 - Consumer groups
 - Offsets
+- Retention
+- Rebalancing
 - At-least-once delivery
-- Duplicate message handling
-- Dead-letter handling
+- Duplicate processing
 
-### Production engineering
-- Correlation IDs
-- Centralized logging
+## Idempotent consumer
+
+~~~text
+Message
+  |
+eventId already processed?
+  | yes              | no
+  v                  v
+ignore          process + record eventId
+~~~
+
+This is important when duplicate delivery can occur.
+
+## Resilience patterns
+
+### Timeout
+Limits how long a request waits.
+
+### Retry
+Useful for transient failures when the operation is safe to repeat.
+
+### Exponential backoff
+Prevents immediate repeated pressure on a failing dependency.
+
+### Circuit breaker
+Temporarily stops calls to a failing dependency.
+
+### Bulkhead
+Prevents one workload from consuming all application resources.
+
+### Rate limiting
+Controls traffic and protects service capacity.
+
+## Observability
+
+Distributed systems require visibility across services.
+
+Study:
+- Structured logs
 - Metrics
-- Distributed tracing
+- Distributed traces
 - OpenTelemetry
-- API documentation
-- Containerization
-- CI/CD
-- Security between services
+- Health/readiness endpoints
+- Correlation/trace IDs
+- Alerting concepts
 
-## Important interview distinction
+## Security
 
-Microservices are not simply "many Spring Boot applications".
+Learn:
+- Authentication vs authorization
+- JWT
+- OAuth2/OIDC concepts
+- Service-to-service authentication
+- TLS
+- Least privilege
+- Secret management
 
-The difficult part is distributed-system behavior: network failures, data consistency, retries, observability, deployment, security and independent ownership.
+## Containerization
 
-## Planned implementation
+The eventual local environment:
 
-1. Order Service
-2. Merchant Service
-3. API Gateway
+~~~text
+Docker Compose
+  +-- order-service
+  +-- merchant-service
+  +-- kafka
+  +-- database
+~~~
+
+## Build roadmap
+
+1. Two Spring Boot services
+2. REST communication
+3. Separate databases
 4. Kafka event flow
 5. Idempotent consumer
-6. Resilience patterns
-7. Docker Compose environment
-8. Integration tests
-9. Observability
+6. Timeouts/retry/backoff
+7. Circuit breaker
+8. Docker Compose
+9. Integration tests
+10. OpenTelemetry
+11. CI/CD
+12. Security
 
+## Interview focus
+
+A strong microservices answer should discuss failure scenarios, data ownership, consistency, observability, deployment and security—not only architecture diagrams.
