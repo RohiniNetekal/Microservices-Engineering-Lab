@@ -202,6 +202,14 @@ public void publish(ClaimedOutboxEvent event) {
         ).get(10, TimeUnit.SECONDS);        // wait for broker acknowledgement
 
         outboxService.markPublished(event.eventId(), event.lockToken());
+    } catch (InterruptedException ex) {
+        Thread.currentThread().interrupt();
+        outboxService.scheduleRetry(
+                event.eventId(),
+                event.lockToken(),
+                nextAttemptTime(event.attemptCount()),
+                "Publisher thread interrupted"
+        );
     } catch (Exception ex) {
         outboxService.scheduleRetry(
                 event.eventId(),
@@ -212,6 +220,18 @@ public void publish(ClaimedOutboxEvent event) {
     }
 }
 ```
+
+A baseline producer configuration is:
+
+```properties
+spring.kafka.producer.acks=all
+spring.kafka.producer.properties.enable.idempotence=true
+spring.kafka.producer.properties.max.in.flight.requests.per.connection=5
+spring.kafka.producer.properties.delivery.timeout.ms=120000
+spring.kafka.producer.properties.request.timeout.ms=30000
+```
+
+Producer idempotence helps with retries handled by that Kafka producer. It does **not** remove the crash window between Kafka acknowledgement and the Oracle `PUBLISHED` update; the outbox and idempotent consumer are still required.
 
 The `markPublished` and `scheduleRetry` updates should include the event ID, `STATUS = 'IN_PROGRESS'` and the same lock token in their `WHERE` clause. If the update affects zero rows, the worker no longer owns that lease and must not overwrite the newer worker's state.
 
