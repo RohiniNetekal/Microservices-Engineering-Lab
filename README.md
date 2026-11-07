@@ -11,7 +11,7 @@ Client
   |
 API Gateway
   |
-  +------------+-------------+
+  +------------+-------------
   |                          |
 Order Service            Merchant Service
   |                          |
@@ -20,7 +20,7 @@ Order DB                 Merchant DB
 OrderCreated
   |
 Kafka
-  +----------+-----------+
+  +----------+-----------
   |                      |
 Notification          Reporting
 Consumer              Consumer
@@ -30,7 +30,7 @@ Consumer              Consumer
 
 The goal is not simply to create multiple Spring Boot applications. A service should represent a meaningful business capability with clear ownership.
 
-Each time ask --->>
+Each time ask:
 - What business capability does this service own?
 - Which data does it own?
 - Which operations must be atomic?
@@ -75,6 +75,10 @@ Important concepts:
 - Outbox pattern
 - Idempotent consumers
 
+The outbox pattern is the next practical step after understanding Kafka delivery and duplicate handling. It makes a database change and its event record commit together, then publishes the event asynchronously.
+
+**Implementation walkthrough:** [Transactional Outbox — Spring Boot, Oracle and Kafka](docs/transactional-outbox-pattern.md). It covers the dual-write failure, Oracle schema, transaction boundaries, concurrent publisher leases, retries, consumer deduplication, ordering, testing and operations.
+
 ## Kafka
 
 Core model:
@@ -108,7 +112,7 @@ eventId already processed?
 ignore          process + record eventId
 ~~~
 
-This is important when duplicate delivery can occur.
+This is important when duplicate delivery can occur. The consumer's deduplication record and its business update should commit in the same local transaction.
 
 ## Resilience patterns
 
@@ -179,4 +183,4 @@ Docker Compose
 10. OpenTelemetry
 11. CI/CD
 12. Security
-
+13. Transactional outbox with a durable publisher and consumer inbox
