@@ -205,23 +205,31 @@ outboxRepository.save(OutboxEvent.pending(
 The publisher can extract the stored context and make a named span current while it sends the event. The KafkaTemplate observation then creates the producer operation beneath that context:
 
 ~~~java
-Map<String, String> carrier = new HashMap<>();
-if (event.traceparent() != null) {
-    carrier.put("traceparent", event.traceparent());
-}
-if (event.tracestate() != null) {
-    carrier.put("tracestate", event.tracestate());
-}
+void publish(OutboxEvent event) throws Exception {
+    Map<String, String> carrier = new HashMap<>();
+    if (event.traceparent() != null) {
+        carrier.put("traceparent", event.traceparent());
+    }
+    if (event.tracestate() != null) {
+        carrier.put("tracestate", event.tracestate());
+    }
 
-Span publishSpan = propagator.extract(carrier, Map::get)
-        .name("outbox.publish")
-        .start();
+    Span publishSpan = propagator.extract(carrier, Map::get)
+            .name("outbox.publish")
+            .start();
 
-try (Tracer.SpanInScope scope = tracer.withSpan(publishSpan)) {
-    kafkaTemplate.send(topic, event.aggregateId(), event.payload())
-            .get(10, TimeUnit.SECONDS);
-} finally {
-    publishSpan.end();
+    try (Tracer.SpanInScope scope = tracer.withSpan(publishSpan)) {
+        try {
+            kafkaTemplate.send(topic, event.aggregateId(), event.payload())
+                    .get(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw ex;
+        }
+        // Propagate other send failures to the publisher's retry handling.
+    } finally {
+        publishSpan.end();
+    }
 }
 ~~~
 
