@@ -146,6 +146,8 @@ Distributed systems require visibility across services.
 - Correlation/trace IDs
 - Alerting concepts
 
+**Implementation walkthrough:** [Distributed Tracing and Observability for Spring Boot Microservices](docs/distributed-tracing-observability.md). It follows a request across HTTP, business spans, Kafka producer/consumer observations and the asynchronous outbox publisher, with practical Micrometer/OpenTelemetry configuration and operational trade-offs.
+
 ## Security
 
 Learn:
