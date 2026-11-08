@@ -335,3 +335,10 @@ Useful operational signals include pending row count, age of the oldest pending 
 - [ ] Add a consumer inbox with a unique event identity.
 - [ ] Write the crash-window and concurrent-worker integration tests.
 - [ ] Measure backlog age and publish latency before tuning batch size or indexes.
+
+
+## Further reading: tracing the asynchronous outbox
+
+The publisher may run after the original HTTP request has completed and on a different thread or process. The request's thread-local trace context is therefore not automatically available to the publisher. If end-to-end causal diagnosis is required, persist the required W3C trace context (typically traceparent and, when used, tracestate) with the outbox row, then extract it in the publisher before creating the Kafka send observation. Do not persist arbitrary baggage or sensitive values.
+
+See the [Distributed Tracing and Observability guide](distributed-tracing-observability.md) for Oracle column examples, Micrometer Propagator injection/extraction, Spring Kafka producer/consumer observation settings, sampling, and verification exercises. This improves diagnosis but does not change the outbox's at-least-once delivery guarantee or the need for an idempotent consumer.
