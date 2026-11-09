@@ -159,6 +159,21 @@ Learn:
 - Least privilege
 - Secret management
 
+### Service-to-service authentication
+
+For service-to-service calls, use an explicit workload identity and a least-privilege authorization model. A common OAuth2 approach is the client-credentials grant:
+
+1. The calling service authenticates as itself to the authorization server.
+2. It obtains a short-lived access token with only the required scope.
+3. The token audience is restricted to the target API.
+4. The receiving service validates signature, issuer, time claims and audience before authorizing the scope.
+
+Do not blindly forward an incoming user's access token to every downstream service. Forward it only when delegated user context is intentionally part of the design and the token's audience/scope contract permits it. Otherwise use a service identity; for stronger workload identity, evaluate mTLS or the platform's workload-identity mechanism.
+
+A service still needs object-level authorization and must not trust a caller-provided tenant ID. Keep client secrets in a secret manager, rotate credentials, use HTTPS, and never log bearer tokens.
+
+For the Spring Security resource-server side, see the [OAuth2 JWT implementation guide](https://github.com/RohiniNetekal/JAVA-backend-developer/blob/main/spring-security/jwt/OAUTH2_RESOURCE_SERVER_IMPLEMENTATION.md).
+
 ## Containerization
 
 The eventual local environment:
