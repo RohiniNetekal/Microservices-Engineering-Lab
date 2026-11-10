@@ -201,3 +201,17 @@ Docker Compose
 11. CI/CD
 12. Security
 13. Transactional outbox with a durable publisher and consumer inbox
+
+
+## CI/CD for distributed services
+
+Treat each service as an independently buildable and testable artifact. A practical pipeline should:
+
+1. Compile and run fast unit tests for each service.
+2. Run integration tests against the database and Kafka behavior that the service actually depends on, using Testcontainers where appropriate.
+3. Verify outbox publisher and consumer idempotency failure scenarios.
+4. Build the container image only after required tests pass.
+5. Publish an immutable image tagged by commit and record its digest.
+6. Promote that same digest through staging and production, with health checks and protected-environment approval.
+
+Do not let a notification-service test require a production Kafka cluster, and do not deploy every service because an unrelated documentation file changed. The [Java backend CI/CD guide](https://github.com/RohiniNetekal/Git-Engineering-Workflow-Lab/blob/main/docs/java-backend-ci-cd.md) provides a Maven workflow template and explains Testcontainers, image promotion, OIDC and least-privilege permissions.
